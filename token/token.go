@@ -9,8 +9,13 @@ const (
 	COMMA     = ","
 	SEMICOLON = ";"
 
-	LET   = "LET"
-	IDENT = "IDENT"
+	LET    = "LET"
+	IF     = "IF"
+	ELSE   = "ELSE"
+	RETURN = "RETURN"
+	TRUE   = "TRUE"
+	FALSE  = "FALSE"
+	IDENT  = "IDENT"
 
 	ASSIGN   = "ASSIGN"
 	PLUS     = "PLUS"
@@ -20,6 +25,9 @@ const (
 	SLASH    = "/"
 	LT       = "<"
 	GT       = ">"
+
+	EQUAL  = "EQUAl"
+	NEQUAL = "NEQUAL"
 
 	INT  = "INT"
 	FUNC = "FUNC"
@@ -36,8 +44,13 @@ type Token struct {
 }
 
 var words = map[string]TokenType{
-	"fn":  FUNC,
-	"let": LET,
+	"fn":     FUNC,
+	"let":    LET,
+	"if":     IF,
+	"else":   ELSE,
+	"true":   TRUE,
+	"false":  FALSE,
+	"return": RETURN,
 }
 
 func LookupWordTokenType(w string) TokenType {

@@ -1,6 +1,8 @@
 package lexer
 
-import "monkey/token"
+import (
+	"monkey/token"
+)
 
 const EOFCHAR byte = 0
 
@@ -26,7 +28,12 @@ func (l *Lexer) NextToken() token.Token {
 	var t token.Token
 	switch l.ch {
 	case '=':
-		t = token.Token{Type: token.ASSIGN, Literal: string(l.ch)}
+		if l.peek() == '=' {
+			l.readChar()
+			t = token.Token{Type: token.EQUAL, Literal: "=="}
+		} else {
+			t = token.Token{Type: token.ASSIGN, Literal: string(l.ch)}
+		}
 	case ';':
 		t = token.Token{Type: token.SEMICOLON, Literal: string(l.ch)}
 	case ',':
@@ -41,17 +48,26 @@ func (l *Lexer) NextToken() token.Token {
 		t = token.Token{Type: token.RPAREN, Literal: string(l.ch)}
 	case '+':
 		t = token.Token{Type: token.PLUS, Literal: string(l.ch)}
-	case '!':
-		t = token.Token{Type: token.BANG, Literal: string(l.ch)}
 	case '-':
 		t = token.Token{Type: token.MINUS, Literal: string(l.ch)}
 	case '/':
 		t = token.Token{Type: token.SLASH, Literal: string(l.ch)}
 	case '*':
 		t = token.Token{Type: token.ASTERISK, Literal: string(l.ch)}
+	case '<':
+		t = token.Token{Type: token.LT, Literal: string(l.ch)}
+	case '>':
+		t = token.Token{Type: token.GT, Literal: string(l.ch)}
 	case EOFCHAR:
 		t = token.Token{Type: token.EOF}
 		return t
+	case '!':
+		if l.peek() == '=' {
+			l.readChar()
+			t = token.Token{Type: token.NEQUAL, Literal: "!="}
+		} else {
+			t = token.Token{Type: token.BANG, Literal: string(l.ch)}
+		}
 	default:
 		if isCharacter(l.ch) {
 			literal := l.readWord()
@@ -108,6 +124,13 @@ func (l *Lexer) readChar() bool {
 	l.chPosition++
 	return true
 
+}
+
+func (l *Lexer) peek() byte {
+	if l.chPosition == len(l.code) {
+		return EOFCHAR
+	}
+	return l.code[l.chPosition]
 }
 
 func isCharacter(ch byte) bool {

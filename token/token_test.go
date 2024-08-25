@@ -10,6 +10,11 @@ func TestLookupWordTokenType(t *testing.T) {
 		{"let", LET},
 		{"fn", FUNC},
 		{"xxx", IDENT},
+		{"if", IF},
+		{"else", ELSE},
+		{"true", TRUE},
+		{"false", FALSE},
+		{"return", RETURN},
 	}
 
 	for i, tt := range tests {
