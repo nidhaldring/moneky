@@ -28,7 +28,7 @@ func (l *Lexer) NextToken() token.Token {
 	var t token.Token
 	switch l.ch {
 	case '=':
-		if l.peek() == '=' {
+		if l.Peek() == '=' {
 			l.readChar()
 			t = token.Token{Type: token.EQUAL, Literal: "=="}
 		} else {
@@ -62,7 +62,7 @@ func (l *Lexer) NextToken() token.Token {
 		t = token.Token{Type: token.EOF}
 		return t
 	case '!':
-		if l.peek() == '=' {
+		if l.Peek() == '=' {
 			l.readChar()
 			t = token.Token{Type: token.NEQUAL, Literal: "!="}
 		} else {
@@ -86,6 +86,18 @@ func (l *Lexer) NextToken() token.Token {
 
 	l.readChar()
 	return t
+}
+
+func (l *Lexer) PeekToken() token.Token {
+	currentPos := l.chPosition
+	currentCh := l.ch
+
+	tok := l.NextToken()
+
+	l.chPosition = currentPos
+	l.ch = currentCh
+
+	return tok
 }
 
 func (l *Lexer) skipWhiteSpaces() {
@@ -126,7 +138,7 @@ func (l *Lexer) readChar() bool {
 
 }
 
-func (l *Lexer) peek() byte {
+func (l *Lexer) Peek() byte {
 	if l.chPosition == len(l.code) {
 		return EOFCHAR
 	}
