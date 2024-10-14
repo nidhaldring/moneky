@@ -44,7 +44,7 @@ type Token struct {
 }
 
 var words = map[string]TokenType{
-	"fn":     FUNC,
+	"func":     FUNC,
 	"let":    LET,
 	"if":     IF,
 	"else":   ELSE,

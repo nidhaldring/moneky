@@ -2,18 +2,32 @@
 package parser
 
 import (
-	"fmt"
 	"monkey/lexer"
 	"monkey/token"
+	"reflect"
 	"strconv"
 )
 
 type Statement interface {
-	statementNode() // used for debugging
+	statementIsEqual(Statement) bool
+}
+
+type LetStatement struct {
+	Identifier string
+	Value      Expression
+}
+
+func (l *LetStatement) statementIsEqual(s Statement) bool {
+	v, ok := s.(*LetStatement)
+	if !ok || v == nil {
+		return false
+	}
+
+	return v.Identifier == l.Identifier
 }
 
 type Expression interface {
-	expressionNode() // used for debugging
+	expressionIsEqual(e Expression) bool
 }
 
 // A numeric expression is simply a number & an operand plus another numeric expression
@@ -28,25 +42,26 @@ type FunctionExpression struct {
 	// for now i'm just capturing their names
 	Parameters []string
 
-	// bosdy is nil for now
+	// body is nil for now
 	Body Expression
 }
 
-func (l *NumericExpression) expressionNode() {
-	fmt.Printf("NumberExpression %+v\n", l)
+func (l *NumericExpression) expressionIsEqual(e Expression) bool {
+	v, ok := e.(*NumericExpression)
+	if !ok || v == nil {
+		return false
+	}
+
+	return v.LeftOperator == l.LeftOperator && v.Operand == l.Operand && v.RightOperator.expressionIsEqual(l.RightOperator)
 }
 
-func (l *FunctionExpression) expressionNode() {
-	fmt.Printf("FunctionExpression %+v\n", l)
-}
+func (l *FunctionExpression) expressionIsEqual(e Expression) bool {
+	v, ok := e.(*FunctionExpression)
+	if !ok {
+		return false
+	}
 
-type LetExpression struct {
-	Identifier string
-	Value      Expression
-}
-
-func (l *LetExpression) expressionNode() {
-	fmt.Printf("LetExpression %+v\n", l)
+	return reflect.DeepEqual(v.Parameters, l.Parameters) && v.Body.expressionIsEqual(l.Body)
 }
 
 type Parser struct {
@@ -70,14 +85,14 @@ func (p *Parser) ParseProgram() []Statement {
 		}
 
 		if tok.Type == token.LET {
-
+			s = append(s, p.parseLetStatement())
 		}
 	}
 
 	return s
 }
 
-func (p *Parser) parseLetExpression() *LetExpression {
+func (p *Parser) parseLetStatement() *LetStatement {
 	tok := p.l.NextToken()
 	if tok.Type != token.IDENT {
 		panic("Parse error: expecting an identifier")
@@ -89,7 +104,7 @@ func (p *Parser) parseLetExpression() *LetExpression {
 		panic("Parse error: expecting an equal sign")
 	}
 
-	return &LetExpression{
+	return &LetStatement{
 		Identifier: ident,
 		Value:      p.parseExpression(),
 	}
@@ -130,12 +145,9 @@ func (p *Parser) parseNumericExpression() *NumericExpression {
 }
 
 func (p *Parser) parseFunctionExpression() *FunctionExpression {
-	// this might sounds stupid since i'm calling this func after checking if the next token is the 'func' keyword
-	// but i'm assuming i might use this somewhere else where i assume what comes next should be a function expr
-	// @TODO: if the above statement is false please delete this
 	tok := p.l.NextToken()
-	if tok.Type != token.LPAREN {
-		panic("Parse error: expected a (")
+	if tok.Type != token.FUNC {
+		panic("Parse error: expected func keyword")
 	}
 
 	tok = p.l.NextToken()
@@ -164,10 +176,13 @@ func (p *Parser) parseFunctionExpression() *FunctionExpression {
 	}
 
 	// @TODO: skip function body for now
-
 	tok = p.l.NextToken()
+	for tok.Type != token.RBRACE && tok.Type != token.EOF {
+		tok = p.l.NextToken()
+	}
+
 	if tok.Type != token.RBRACE {
-		panic("Parse error: expected a }")
+		panic("Parse error: expected a } got EOF")
 	}
 
 	return &FunctionExpression{
