@@ -8,6 +8,34 @@ import (
 	"strconv"
 )
 
+type Parser struct {
+	l *lexer.Lexer
+}
+
+func NewParser(code string) Parser {
+	l := lexer.NewLexer(code)
+	return Parser{
+		l: &l,
+	}
+}
+
+func (p *Parser) ParseProgram() []Statement {
+	s := make([]Statement, 0)
+
+	for {
+		tok := p.l.NextToken()
+		if tok.Type == token.EOF {
+			break
+		}
+
+		if tok.Type == token.LET {
+			s = append(s, p.parseLetStatement())
+		}
+	}
+
+	return s
+}
+
 type Statement interface {
 	statementIsEqual(Statement) bool
 }
@@ -62,34 +90,6 @@ func (l *FunctionExpression) expressionIsEqual(e Expression) bool {
 	}
 
 	return reflect.DeepEqual(v.Parameters, l.Parameters) && v.Body.expressionIsEqual(l.Body)
-}
-
-type Parser struct {
-	l *lexer.Lexer
-}
-
-func NewParser(code string) Parser {
-	l := lexer.NewLexer(code)
-	return Parser{
-		l: &l,
-	}
-}
-
-func (p *Parser) ParseProgram() []Statement {
-	s := make([]Statement, 0)
-
-	for {
-		tok := p.l.NextToken()
-		if tok.Type == token.EOF {
-			break
-		}
-
-		if tok.Type == token.LET {
-			s = append(s, p.parseLetStatement())
-		}
-	}
-
-	return s
 }
 
 func (p *Parser) parseLetStatement() *LetStatement {
